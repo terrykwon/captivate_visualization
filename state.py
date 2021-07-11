@@ -34,14 +34,49 @@ class Context:
         self.toys = [Toy(name) for name in TOYS]
 
 
-    def on_visual_attention(self, toy_name):
-        ALPHA = 0.02
+    def on_visual_attention(self, toy_name, alpha=0.005):
+        ALPHA = alpha
 
         for toy in self.toys:
             if toy.name == toy_name:
                 toy.weight = toy.weight + ALPHA
-        
             toy.weight /= (1 + ALPHA)  # normalize
+
+        self.toys = sorted(self.toys, reverse=True)
+
+
+    def on_visual_attention_2(self, toy_name, alpha=0.005):
+        ''' Version used in pilots. Approximately equal to the above.
+        '''
+        ALPHA = alpha
+
+        for toy in self.toys:
+            if toy.name == toy_name:
+                toy.weight = (1 - ALPHA) * toy.weight + ALPHA
+            else:
+                toy.weight = (1 - ALPHA) * toy.weight
+
+        self.toys = sorted(self.toys, reverse=True)
+
+    
+    def on_visual_attention_3(self, toy_name, alpha=0.02):
+        ''' Linear increase and decrease.
+        '''
+        ALPHA = alpha
+        delta_w = 0
+        w_attended = 0
+        EPSILON = 0.005  # prevent division by 0
+
+        for toy in self.toys:
+            if toy.name == toy_name:
+                delta_w = min(1-toy.weight-EPSILON, ALPHA)
+                w_attended = toy.weight
+                toy.weight += delta_w
+                break
+
+        for toy in self.toys:
+            if toy.name != toy_name:
+                toy.weight -= delta_w * toy.weight / (1 - w_attended)
 
         self.toys = sorted(self.toys, reverse=True)
 
@@ -92,5 +127,7 @@ class State:
         for toy in self.context.toys:
             print(f'{toy.name:5}: weight = {toy.weight:.3f}  | ', end='')
             print(', '.join([x.phrase for x in toy.phrases]))
+        print('weight sum: {}'.format(
+                sum([x.weight for x in self.context.toys])))
 
 
