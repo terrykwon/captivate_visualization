@@ -145,10 +145,6 @@ class State:
 
     
     def on_time_step_increment(self):
-        '''Same update policy as target_word_spoken for all the words
-        that are currently displayed?
-        '''
-        self.time += 1
         for phrase in self.shown_cards:
             phrase.time_displayed += 1
         self.calculate_cards()
